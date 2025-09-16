@@ -1,0 +1,197 @@
+/* --- LOGO / ICONS --- */
+.logo-icon-large, .logo-icon, .user-avatar {
+    background: linear-gradient(135deg, #d08bff 0%, #8b6eff 100%);
+}
+
+/* --- TITLES / GRADIENT TEXT --- */
+.welcome-title,
+.hero h1,
+.products h1 {
+    background: linear-gradient(135deg, #d08bff 0%, #8b6eff 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* --- ACTIVE TABS --- */
+.auth-tab.active {
+    background: linear-gradient(135deg, #d08bff 0%, #8b6eff 100%);
+    box-shadow: 0 5px 15px rgba(208, 139, 255, 0.3);
+}
+
+/* --- BUTTONS --- */
+.btn-primary {
+    background: linear-gradient(135deg, #d08bff 0%, #8b6eff 100%);
+    color: #fff;
+}
+.btn-primary:hover {
+    box-shadow: 0 10px 30px rgba(208, 139, 255, 0.4);
+}
+
+/* --- INPUT FOCUS --- */
+.form-input:focus {
+    border-color: #d08bff;
+    box-shadow: 0 0 20px rgba(208, 139, 255, 0.3);
+}
+
+/* --- AUTH SWITCH LINKS --- */
+.auth-switch span {
+    color: #d08bff;
+}
+.auth-switch span:hover {
+    color: #8b6eff;
+    text-shadow: 0 0 10px rgba(208, 139, 255, 0.5);
+}
+
+/* --- NAVIGATION HOVER --- */
+.nav-menu a:hover, .nav-menu a.active {
+    color: #d08bff;
+    background: rgba(208, 139, 255, 0.1);
+    text-shadow: 0 0 10px rgba(208, 139, 255, 0.5);
+}
+
+/* --- BACKGROUND GLOW --- */
+.welcome-page,
+.hero {
+    background: radial-gradient(circle at 50% 50%, rgba(208, 139, 255, 0.1) 0%, transparent 70%);
+}
+.campaign-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+}
+.swipe-container {
+  position: relative;
+  width: 350px;
+  height: 500px;
+  margin: 0 auto;
+}
+
+.influencer-card {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  overflow: hidden;
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.influencer-card img {
+  width: 100%;
+  border-radius: 15px;
+  height: 250px;
+  object-fit: cover;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.action-buttons button {
+  background: #fff;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+* {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: #f5f6fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    #card-stack {
+      position: relative;
+      width: 320px;
+      height: 480px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      cursor: grab;
+    }
+
+    .card img {
+      width: 100%;
+      height: 60%;
+      object-fit: cover;
+    }
+
+    .card-content {
+      padding: 15px;
+      text-align: center;
+      flex: 1;
+    }
+
+    .card h2 {
+      font-size: 22px;
+      margin-bottom: 5px;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.9);
+    }
+
+    .btn.dislike {
+      background: #ff4d4d;
+    }
+
+    .btn.like {
+      background: #4cd137;
+    }

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VelaCross - AI-Powered Creator Matching</title>
+    <style>
+        * {margin:0; padding:0; box-sizing:border-box;}
+        body {font-family:'Segoe UI', system-ui, sans-serif; background: linear-gradient(135deg, #0a0f1c 0%, #a07fc6 100%); color:#fff; overflow-x:hidden;}
+        .header {background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.1); position: fixed; top:0; width:100%; z-index:1000;}
+        .nav {display:flex; justify-content:space-between; align-items:center; max-width:1200px; margin:0 auto; padding:1rem 2rem;}
+        .logo {display:flex; align-items:center; gap:10px; font-size:1.6rem; font-weight:bold;}
+        .logo-icon {width:40px; height:40px; background: linear-gradient(135deg, #cfa7e0 0%, #0099ff 100%); border-radius:50%; display:flex; align-items:center; justify-content:center;}
+        .logo-icon::before {content:'∞'; color:#fff; font-size:20px; font-weight:bold;}
+        .nav-buttons {display:flex; gap:1rem;}
+        .btn {padding:0.5rem 1.5rem; border:none; border-radius:25px; cursor:pointer; transition:all 0.3s; font-weight:500; text-decoration:none; display:inline-block;}
+        .btn-secondary {background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.3);}
+        .btn-secondary:hover {background: rgba(255,255,255,0.1); color: #e1adee;}
+        .btn-primary {background: linear-gradient(135deg, #a07fc6, #0099ff); color:#fff;}
+        .btn-primary:hover {transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,255,136,0.3);}
+        .container {max-width:1200px; margin:0 auto; padding:6rem 2rem 2rem;}
+        .auth-modal, .overlay {position: fixed; top:0; left:0; width:100%; height:100%; display:none; z-index:2000;}
+        .auth-modal.active, .overlay.active {display:flex; justify-content:center; align-items:center;}
+        .auth-modal {background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);}
+        .auth-form {background: rgba(255,255,255,0.1); padding:3rem; border-radius:20px; border:1px solid rgba(255,255,255,0.2); min-width:400px; position:relative;}
+        .form-group {margin-bottom:1.5rem;}
+        .form-group label {display:block; margin-bottom:0.5rem; color:#a07fc6;}
+        .form-group input, .form-group select, .form-group textarea {width:100%; padding:0.8rem; border:1px solid rgba(255,255,255,0.3); border-radius:10px; background: rgba(255,255,255,0.05); color:#fff; font-size:1rem;}
+        .form-group input::placeholder, .form-group textarea::placeholder {color: rgba(255,255,255,0.5);}
+        .close-btn {position:absolute; top:1rem; right:1.5rem; background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;}
+        .dashboard {display:none; padding-top:6rem;}
+        .dashboard.active {display:block;}
+        .dashboard-header {display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;}
+        .dashboard-nav {display:flex; gap:1rem; margin-bottom:2rem;}
+        .dashboard-nav .btn {background: rgba(255,255,255,0.1); color:#fff;}
+        .dashboard-nav .btn.active {background: linear-gradient(135deg, #00ff88, #0045ff);}
+        .card {background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:2rem; border-radius:20px; margin-bottom:2rem;}
+        .card h3 {color:#a07fc6; margin-bottom:1rem;}
+        .grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:2rem;}
+        .campaign-card {background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:1.5rem; border-radius:15px; transition: all 0.3s;}
+        .campaign-card:hover {transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,255,136,0.1);}
+        .campaign-status {display:inline-block; padding:0.3rem 1rem; border-radius:15px; font-size:0.8rem; margin-bottom:1rem;}
+        .status-active {background: rgba(0,255,136,0.2); color:#00ff88;}
+        .status-pending {background: rgba(255,136,0,0.2); color:#ff8800;}
+        .bid-form {display:none; position: fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: rgba(255,255,255,0.1); padding:2rem; border-radius:20px; border:1px solid rgba(255,255,255,0.2); z-index:3000; min-width:400px;}
+        .bid-form.active {display:block;}
+        .ai-brief {background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,153,255,0.1)); border:1px solid rgba(0,255,136,0.3); padding:1.5rem; border-radius:15px; margin:1rem 0;}
+        .creator-profile {display:flex; align-items:center; gap:1rem; margin-bottom:1rem;}
+        .creator-avatar {width:50px; height:50px; border-radius:50%; background: linear-gradient(135deg, #00ff88, #0099ff); display:flex; align-items:center; justify-content:center; font-weight:bold;}
+        .metrics {display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1rem; margin-bottom:2rem;}
+        .metric-card {background: rgba(255,255,255,0.05); padding:1.5rem; border-radius:15px; text-align:center;}
+        .metric-value {font-size:2rem; font-weight:bold; color:#0099ff;}
+        .hidden {display:none;}
+        /* Matching UI */
+        .matching-section {margin: 2.5rem 0;}
+        .card-stack-container {display: flex; flex-direction: column; align-items: center;}
+        #card-stack {width: 350px; height: 460px; position: relative; margin-bottom:1rem;}
+        #card-stack .card {width: 100%; height: 100%; position: absolute; top: 0; left: 0; border-radius: 18px; box-shadow: 0 16px 32px rgba(0,0,0,0.15); background: rgba(255,255,255,0.15); backdrop-filter: blur(2px); transition: box-shadow 0.25s;}
+        #card-stack .card img {width: 100%; height: 225px; border-radius: 18px 18px 0 0; object-fit: cover;}
+        #card-stack .card-content {padding: 1rem;}
+        .card-btn-row {display:flex; gap:2rem; justify-content:center; margin-top:1rem;}
+        .btn.like, .btn.dislike {border-radius:50%; width:54px; height:54px; font-size:2rem; padding:0;}
+        .btn.like {background:#0fd28f;}
+        .btn.dislike {background:#e13d63;}
+        .btn.like:hover {background:#18ffae;}
+        .btn.dislike:hover {background:#ff668d;}
+    </style>
+</head>
+<body>
+<!-- Header -->
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <div class="logo-icon"></div> VelaCross
+        </div>
+        <div class="nav-buttons">
+            <a href="#" class="btn btn-secondary" onclick="showLogin()">Login</a>
+            <a href="#" class="btn btn-primary" onclick="showSignup()">Get Started</a>
+        </div>
+    </nav>
+</header>
+<!-- Landing -->
+<main class="container" id="landing">
+    <div style="text-align:center; padding:4rem 0;">
+        <h1 style="font-size:3.5rem; background: linear-gradient(135deg,#d782d4,#0099ff); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; margin-bottom:1rem;">
+            AI-Powered Creator Matching
+        </h1>
+        <p style="font-size:1.3rem; opacity:0.8; margin-bottom:2rem;">
+            Connect brands with perfect creators through intelligent matching and automated campaign management
+        </p>
+        <div style="display:flex; gap:1rem; justify-content:center;">
+            <button class="btn btn-primary" onclick="showSignup('brand')">I'm a Brand</button>
+            <button class="btn btn-secondary" onclick="showSignup('creator')">I'm a Creator</button>
+        </div>
+    </div>
+    <section class="matching-section">
+        <h2 style="text-align:center; margin-bottom:1rem; font-size:2rem; color:#fff;font-weight:600;">Discover Creators (Beta)</h2>
+        <div class="card-stack-container">
+            <div id="card-stack"></div>
+            <div class="card-btn-row">
+                <button class="btn dislike" title="Skip">✗</button>
+                <button class="btn like" title="Like">✓</button>
+            </div>
+        </div>
+    </section>
+    <div class="grid" style="margin-top:4rem;">
+        <div class="card"><h3>🎯 Smart Matching</h3><p>AI-powered algorithm matches brands with creators based on audience, engagement, and campaign goals.</p></div>
+        <div class="card"><h3>💰 Secure Payments</h3><p>Escrow-based payment system with multi-currency support including USD, ETH, and USDT.</p></div>
+        <div class="card"><h3>📊 Real-time Analytics</h3><p>Track campaign performance with integrated social media APIs and automated ROI reporting.</p></div>
+        <div class="card"><h3>🤖 AI Brief Generation</h3><p>Generate compelling campaign briefs automatically based on your goals and target audience.</p></div>
+    </div>
+</main>
+<!-- Dashboard -->
+<div class="container dashboard" id="dashboard">
+    <div class="dashboard-header">
+        <div>
+            <h2 id="dashboardTitle">Dashboard</h2>
+            <p id="welcomeMessage">Welcome back!</p>
+        </div>
+        <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
+    <!-- Metrics -->
+    <div class="metrics" id="metrics">
+        <div class="metric-card"><div class="metric-value" id="totalCampaigns">0</div><div>Total Campaigns</div></div>
+        <div class="metric-card"><div class="metric-value" id="activeCampaigns">0</div><div>Active Campaigns</div></div>
+        <div class="metric-card"><div class="metric-value" id="totalSpent">$0</div><div>Total Spent/Earned</div></div>
+    </div>
+    <!-- Dashboard Navigation -->
+    <div class="dashboard-nav">
+        <button class="btn active" onclick="showDashboardSection('campaigns', event)">Campaigns</button>
+        <button class="btn" onclick="showDashboardSection('profile', event)">Profile</button>
+        <button class="btn" onclick="showDashboardSection('create', event)" id="createBtn">Create Campaign</button>
+        <button class="btn" onclick="showDashboardSection('browse', event)" id="browseBtn">Browse Campaigns</button>
+    </div>
+    <!-- Campaigns Section -->
+    <div id="campaignsSection">
+        <div class="card">
+            <h3>Your Campaigns</h3>
+            <div id="campaignsList"></div>
+        </div>
+    </div>
+    <!-- Profile Section -->
+    <div id="profileSection" class="hidden">
+        <div class="card">
+            <h3>Profile Settings</h3>
+            <form id="profileForm">
+                <div class="form-group"><label>Name</label><input type="text" id="profileName" placeholder="Your name"></div>
+                <div class="form-group"><label>Bio</label><textarea id="profileBio" placeholder="Tell us about yourself" rows="4"></textarea></div>
+                <div id="creatorFields" class="hidden">
+                    <div class="form-group"><label>Languages</label><input type="text" id="profileLanguages" placeholder="e.g., English, Spanish, Mandarin"></div>
+                    <div class="form-group"><label>Categories</label><input type="text" id="profileCategories" placeholder="e.g., Fashion, Tech, Lifestyle"></div>
+                    <div class="form-group"><label>Audience Size</label>
+                        <select id="profileAudienceSize">
+                            <option value="">Select audience size</option>
+                            <option value="micro">Micro (1K-10K)</option>
+                            <option value="mid">Mid-tier (10K-100K)</option>
+                            <option value="macro">Macro (100K-1M)</option>
+                            <option value="mega">Mega (1M+)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Base Rate (USD)</label><input type="number" id="profileRate" placeholder="Your base rate per post"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Profile</button>
+            </form>
+        </div>
+    </div>
+    <!-- Create Campaign Section -->
+    <div id="createSection" class="hidden">
+        <div class="card">
+            <h3>Create New Campaign</h3>
+            <form id="campaignForm">
+                <div class="form-group"><label>Campaign Name</label><input type="text" id="campaignName" placeholder="Give your campaign a name" required></div>
+                <div class="form-group"><label>Product/Service</label><input type="text" id="campaignProduct" placeholder="What are you promoting?" required></div>
+                <div class="form-group"><label>Target Region</label>
+                    <select id="campaignRegion" required>
+                        <option value="">Select region</option>
+                        <option value="north-america">North America</option>
+                        <option value="europe">Europe</option>
+                        <option value="asia">Asia</option>
+                        <option value="global">Global</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Budget (USD)</label><input type="number" id="campaignBudget" placeholder="Total campaign budget" required></div>
+                <div class="form-group"><label>Campaign Goal</label>
+                    <select id="campaignGoal" required>
+                        <option value="">Select goal</option>
+                        <option value="awareness">Brand Awareness</option>
+                        <option value="engagement">Engagement</option>
+                        <option value="conversions">Drive Conversions</option>
+                        <option value="reach">Increase Reach</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="generateAIBrief()">✨ Generate AI Brief</button>
+                <div id="aiBrief" class="ai-brief" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary">Create Campaign</button>
+            </form>
+        </div>
+    </div>
+    <!-- Browse Campaigns Section -->
+    <div id="browseSection" class="hidden">
+        <div class="card">
+            <h3>Browse Open Campaigns</h3>
+            <div class="form-group"><input type="text" id="searchCampaigns" placeholder="Search campaigns..." onkeyup="filterCampaigns()"></div>
+            <div id="browseCampaignsList"></div>
+        </div>
+    </div>
+</div>
+<!-- Auth Modal -->
+<div class="auth-modal" id="authModal">
+    <div class="auth-form">
+        <button class="close-btn" onclick="closeAuthModal()">&times;</button>
+        <h2 id="authTitle">Sign Up</h2>
+        <form id="authForm">
+            <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
+            <div class="form-group"><label>Password</label><input type="password" id="password" required></div>
+            <div class="form-group" id="roleGroup">
+                <label>I am a...</label>
+                <select id="userRole" required>
+                    <option value="">Select role</option>
+                    <option value="brand">Brand/Advertiser</option>
+                    <option value="creator">Creator/Influencer</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Continue</button>
+        </form>
+    </div>
+</div>
+<!-- Bid Modal -->
+<div class="overlay" id="bidOverlay" onclick="closeBidModal()"></div>
+<div class="bid-form" id="bidModal">
+    <h3>Submit Your Bid</h3>
+    <form id="bidForm">
+        <div class="form-group"><label>Your Rate (USD)</label><input type="number" id="bidAmount" placeholder="Your rate for this campaign" required></div>
+        <div class="form-group"><label>Deliverables</label><textarea id="bidDeliverables" placeholder="e.g., 1 Instagram post..." rows="3" required></textarea></div>
+        <div class="form-group"><label>Timeline (days)</label><input type="number" id="bidTimeline" placeholder="How many days to complete?" required></div>
+        <div class="form-group"><label>Additional Notes</label><textarea id="bidNotes" placeholder="Any additional information..." rows="2"></textarea></div>
+        <div style="display:flex; gap:1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeBidModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit Bid</button>
+        </div>
+    </form>
+</div>
+<!-- Delivery Modal -->
+<div class="overlay" id="deliveryOverlay" onclick="closeDeliveryModal()"></div>
+<div class="bid-form" id="deliveryModal">
+    <h3>Submit Delivery</h3>
+    <form id="deliveryForm">
+        <input type="file" id="deliveryFile" accept=".jpg,.png,.mp4,.pdf,.zip,.docx" required>
+        <div style="margin-top:1rem; display:flex; gap:1rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeDeliveryModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+</div>
+<script>
+    // ======== Data Storage and Auth as before ========
+    let users = [];
+    let campaigns = [];
+    let currentUser = null;
+    let currentBidCampaign = null;
+    function showSignup(role=null){
+        document.getElementById('authTitle').innerText='Sign Up';
+        document.getElementById('authModal').classList.add('active');
+        if(role) {document.getElementById('userRole').value = role; document.getElementById('roleGroup').style.display='none';}
+        else document.getElementById('roleGroup').style.display='block';
+    }
+    function showLogin(){document.getElementById('authTitle').innerText='Login'; document.getElementById('authModal').classList.add('active'); document.getElementById('roleGroup').style.display='none';}
+    function closeAuthModal(){document.getElementById('authModal').classList.remove('active');}
+    document.getElementById('authForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        let role = document.getElementById('userRole').value;
+        if(document.getElementById('authTitle').innerText==='Sign Up'){
+            if(users.find(u=>u.email===email)){alert('Email already exists!'); return;}
+            const user = {id:Date.now().toString(), email, password, role};
+            users.push(user);
+            currentUser = user;
+            alert('Signup successful!');
+        } else {
+            const user = users.find(u=>u.email===email && u.password===password);
+            if(!user){alert('Invalid credentials'); return;}
+            currentUser = user;
+            alert('Login successful!');
+        }
+        closeAuthModal();
+        showDashboard();
+    });
+    function logout(){currentUser=null; campaigns=[]; document.getElementById('landing').style.display='block'; document.getElementById('dashboard').style.display='none';}
+    function showDashboard(){
+        document.getElementById('landing').style.display='none';
+        document.getElementById('dashboard').style.display='block';
+        document.getElementById('welcomeMessage').innerText=`Welcome, ${currentUser.email}`;
+        if(currentUser.role==='creator') document.getElementById('creatorFields').classList.remove('hidden');
+        else document.getElementById('creatorFields').classList.add('hidden');
+        updateDashboard();
+    }
+    function showDashboardSection(section, e){
+        if(e) e.preventDefault();
+        document.querySelectorAll('#campaignsSection,#profileSection,#createSection,#browseSection').forEach(el=>el.classList.add('hidden'));
+        document.querySelectorAll('.dashboard-nav .btn').forEach(b=>b.classList.remove('active'));
+        document.getElementById(section+'Section').classList.remove('hidden');
+        if(e) e.target.classList.add('active');
+        if(section==='browse') loadBrowseCampaigns();
+    }
+    function updateDashboard(){
+        document.getElementById('totalCampaigns').innerText=campaigns.length;
+        document.getElementById('activeCampaigns').innerText=campaigns.filter(c=>c.status==='active').length;
+        let total = campaigns.reduce((sum,c)=>sum+(c.budget||0),0);
+        document.getElementById('totalSpent').innerText='$'+total;
+        let list = document.getElementById('campaignsList');
+        if(!campaigns.length){list.innerHTML='<p>No campaigns yet.</p>'; return;}
+        list.innerHTML=campaigns.map(c=>`
+            <div class="campaign-card">
+                <h4>${c.name}</h4>
+                <p>Product: ${c.product}</p>
+                <p>Budget: $${c.budget}</p>
+                <p>Goal: ${c.goal}</p>
+                <span class="campaign-status ${c.status==='active'?'status-active':'status-pending'}">${c.status}</span>
+            </div>
+        `).join('');
+    }
+    document.getElementById('profileForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        currentUser.name = document.getElementById('profileName').value;
+        currentUser.bio = document.getElementById('profileBio').value;
+        if(currentUser.role==='creator'){
+            currentUser.languages = document.getElementById('profileLanguages').value;
+            currentUser.categories = document.getElementById('profileCategories').value;
+            currentUser.audienceSize = document.getElementById('profileAudienceSize').value;
+            currentUser.baseRate = document.getElementById('profileRate').value;
+        }
+        alert('Profile updated!');
+    });
+    document.getElementById('campaignForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        const newCampaign = {
+            id: Date.now().toString(),
+            name: document.getElementById('campaignName').value,
+            product: document.getElementById('campaignProduct').value,
+            region: document.getElementById('campaignRegion').value,
+            budget: parseInt(document.getElementById('campaignBudget').value),
+            goal: document.getElementById('campaignGoal').value,
+            brandId: currentUser.id,
+            status:'active',
+            createdAt: new Date().toISOString(),
+            bids:0
+        };
+        campaigns.push(newCampaign);
+        alert('Campaign created!');
+        document.getElementById('campaignForm').reset();
+        document.getElementById('aiBrief').style.display='none';
+        updateDashboard();
+        showDashboardSection('campaigns');
+    });
+    function generateAIBrief(){
+        const name = document.getElementById('campaignName').value;
+        const product = document.getElementById('campaignProduct').value;
+        const goal = document.getElementById('campaignGoal').value;
+        if(!name||!product||!goal){alert('Fill campaign name, product, and goal first'); return;}
+        const briefText=`Campaign "${name}" is focused on promoting "${product}" with the goal of ${goal}. Creators should target the audience most likely to engage.`;
+        const briefDiv=document.getElementById('aiBrief');
+        briefDiv.style.display='block';
+        briefDiv.textContent=briefText;
+    }
+    function loadBrowseCampaigns(){filterCampaigns();}
+    function filterCampaigns(){
+        const query = document.getElementById('searchCampaigns').value.toLowerCase();
+        const filtered = campaigns.filter(c=>c.name.toLowerCase().includes(query));
+        const list = document.getElementById('browseCampaignsList');
+        if(!filtered.length){list.innerHTML='<p>No campaigns found.</p>'; return;}
+        list.innerHTML = filtered.map(c=>`
+            <div class="campaign-card">
+                <h4>${c.name}</h4>
+                <p>Budget: $${c.budget}</p>
+                <button class="btn btn-primary" onclick="showBidModal('${c.id}')">Submit Bid</button>
+            </div>
+        `).join('');
+    }
+    function showBidModal(campaignId){currentBidCampaign = campaigns.find(c=>c.id===campaignId); document.getElementById('bidModal').classList.add('active'); document.getElementById('bidOverlay').classList.add('active');}
+    function closeBidModal(){document.getElementById('bidModal').classList.remove('active'); document.getElementById('bidOverlay').classList.remove('active');}
+    document.getElementById('bidForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        alert('Bid submitted!');
+        closeBidModal();
+    });
+    function closeDeliveryModal(){document.getElementById('deliveryModal').classList.remove('active'); document.getElementById('deliveryOverlay').classList.remove('active');}
+    document.getElementById('deliveryForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        alert('Delivery submitted!');
+        closeDeliveryModal();
+    });
+
+    // ======== Matching UI (Product Inspired SWIPE) ========
+    const influencers = [
+      {
+        name: "Jamie Alvin",
+        image: "https://images.unsplash.com/photo-1502685104226-ee32379fefbe",
+        bio: "📍 NYC | Travel + Fashion | 440k followers"
+      },
+      {
+        name: "Alex Kim",
+        image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde",
+        bio: "📍 LA | Fitness Coach | 210k followers"
+      },
+      {
+        name: "Sophia Cruz",
+        image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2",
+        bio: "📍 Miami | Food Blogger | 320k followers"
+      },
+      {
+        name: "Mina Patel",
+        image: "https://images.unsplash.com/photo-1511367461989-f85a21fda167",
+        bio: "📍 London | Beauty + Lifestyle | 280k followers"
+      },
+      {
+        name: "Viktor Gröning",
+        image: "https://images.unsplash.com/photo-1464863979621-258859e62245",
+        bio: "📍 Berlin | Gaming Creator | 390k followers"
+      }
+    ];
+    const stack = document.getElementById('card-stack');
+    function createCard(influencer) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${influencer.image}" alt="">
+        <div class="card-content">
+          <h2>${influencer.name}</h2>
+          <p>${influencer.bio}</p>
+        </div>
+      `;
+      stack.appendChild(card);
+      addDrag(card);
+    }
+    influencers.slice().reverse().forEach(createCard);
+    function addDrag(card) {
+      let offsetX = 0;
+      let offsetY = 0;
+      let isDragging = false;
+      card.addEventListener('mousedown', startDrag);
+      card.addEventListener('touchstart', startDrag);
+      function startDrag(e) {
+        isDragging = true;
+        offsetX = (e.touches ? e.touches[0].clientX : e.clientX);
+        offsetY = (e.touches ? e.touches[0].clientY : e.clientY);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('touchend', endDrag);
+      }
+      function drag(e) {
+        if (!isDragging) return;
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - offsetX;
+        const y = (e.touches ? e.touches[0].clientY : e.clientY) - offsetY;
+        card.style.transform = `translate(${x}px, ${y}px) rotate(${x/10}deg)`;
+      }
+      function endDrag(e) {
+        isDragging = false;
+        const x = (e.changedTouches ? e.changedTouches[0].clientX : e.clientX) - offsetX;
+        if (x > 150) swipe('right', card);
+        else if (x < -150) swipe('left', card);
+        else card.style.transform = '';
+        
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('mouseup', endDrag);
+        document.removeEventListener('touchmove', drag);
+        document.removeEventListener('touchend', endDrag);
+      }
+    }
+    function swipe(direction, card) {
+      card.style.transition = '0.5s';
+      card.style.transform = `translate(${direction === 'right' ? 500 : -500}px, 0) rotate(${direction === 'right' ? 45 : -45}deg)`;
+      setTimeout(() => {
+        card.remove();
+      }, 500);
+    }
+    document.querySelector('.btn.like').addEventListener('click', () => {
+      const card = stack.lastElementChild;
+      if (card) swipe('right', card);
+    });
+    document.querySelector('.btn.dislike').addEventListener('click', () => {
+      const card = stack.lastElementChild;
+      if (card) swipe('left', card);
+    });
+  </script>
+</body>
+</html>
